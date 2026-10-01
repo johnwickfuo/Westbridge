@@ -7,9 +7,26 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use App\Support\DisplayCurrencies;
 
 class ProfileController extends Controller
 {
+    /** Set this user's display currency, leaving USD ledger amounts unchanged. */
+    public function updateCurrency(Request $request)
+    {
+        $data = $request->validate([
+            'currency' => ['required', 'string', Rule::in(array_keys(DisplayCurrencies::all()))],
+        ]);
+
+        $request->user()->update([
+            's_currency' => $data['currency'],
+            'currency' => DisplayCurrencies::symbol($data['currency']),
+        ]);
+
+        return redirect()->back()->with('success', 'Display currency updated successfully.');
+    }
+
     //Updating Profile Route
     public function updateprofile(Request $request)
     {
