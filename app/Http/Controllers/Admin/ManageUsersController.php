@@ -560,18 +560,20 @@ public function deleteloan($id)
     //update users info
     public function edituser(Request $request)
     {
+        $targetUser = User::findOrFail($request->input('user_id'));
+
         $data = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'name' => ['required', 'string', 'max:191'],
-            'email' => ['required', 'email', 'max:191', Rule::unique('users', 'email')->ignore($request->user_id)],
-            'username' => ['required', 'string', 'alpha_dash', 'max:191', Rule::unique('users', 'username')->ignore($request->user_id)],
+            'email' => ['required', 'email', 'max:191', Rule::unique('users', 'email')->ignore($targetUser->id)],
+            'username' => ['required', 'string', 'alpha_dash', 'max:191', Rule::unique('users', 'username')->ignore($targetUser->id)],
             'phone' => ['required', 'string', 'max:191'],
             'country' => ['nullable', 'string', 'max:191'],
             'ref_link' => ['nullable', 'string', 'max:191'],
             'currency' => ['required', 'string', Rule::in(array_keys(DisplayCurrencies::all()))],
         ]);
 
-        User::whereKey($data['user_id'])->update([
+        $targetUser->update([
             'name' => $data['name'],
             'email' => $data['email'],
             'country' => $data['country'] ?? null,
