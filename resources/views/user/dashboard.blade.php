@@ -35,7 +35,7 @@
             <div class="flex gap-2">
                 <select id="dashboard-currency" name="currency" class="rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 text-sm">
                     @foreach(\App\Support\DisplayCurrencies::all() as $code => $symbol)
-                        <option value="{{ $code }}" @selected((Auth::user()->s_currency ?: 'USD') === $code)>{{ $code }} ({{ $symbol }})</option>
+                        <option value="{{ $code }}" {{ (Auth::user()->s_currency ?: 'USD') === $code ? 'selected' : '' }}>{{ $code }} ({{ $symbol }})</option>
                     @endforeach
                 </select>
                 <button type="submit" class="rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white text-sm font-medium">Save</button>
