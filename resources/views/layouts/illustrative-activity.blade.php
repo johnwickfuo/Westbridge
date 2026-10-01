@@ -1,4 +1,4 @@
-{{-- Public-page financial activity examples. These are deliberately identified as fictional:
+{{-- Public-page financial activity examples. These are clearly identified as examples:
      never display generated names or amounts as confirmed platform transactions. --}}
 <style>
     #wb-sample-activity[hidden] { display: none !important; }
@@ -79,11 +79,11 @@
 <div id="wb-sample-activity" hidden aria-live="polite" aria-atomic="true">
     <section class="wb-activity-card" aria-label="Illustrative financial activity">
         <div class="wb-activity-heading">
-            <span class="wb-activity-label" id="wb-sample-activity-kind">Illustrative example</span>
+            <span class="wb-activity-label" id="wb-sample-activity-kind">Activity example</span>
             <button type="button" class="wb-activity-close" id="wb-sample-activity-close" aria-label="Hide illustrative activity examples">&times;</button>
         </div>
         <p class="wb-activity-message" id="wb-sample-activity-message"></p>
-        <small class="wb-activity-disclosure">Fictional scenario — not a live customer transaction.</small>
+        <small class="wb-activity-disclosure">Sample activity · Not live transactions.</small>
     </section>
 </div>
 <script>
@@ -97,7 +97,7 @@
         var close = document.getElementById('wb-sample-activity-close');
         if (!container || !kind || !message || !close) return;
 
-        // Each fictional person yields a deposit, withdrawal and investment
+        // Each example persona yields a deposit, withdrawal and investment
         // example: 50 x 3 = 150 different activity variations per cycle.
         // This list intentionally contains no African countries.
         var people = [
@@ -190,7 +190,7 @@
                 maximumFractionDigits: 0
             }).format(amount);
 
-            kind.textContent = 'Illustrative example · ' + action.kind;
+            kind.textContent = 'Sample activity · ' + action.kind;
             message.textContent = person[0] + ' from ' + person[1] + ' ' +
                 action.phrases[sample.person % action.phrases.length](amountText) + '.';
             container.hidden = false;
