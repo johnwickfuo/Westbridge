@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use App\Support\DisplayCurrencies;
+use App\Support\FlexibleTextInput;
 use Illuminate\Validation\Rule;
 class ManageUsersController extends Controller
 {
@@ -560,7 +561,15 @@ public function deleteloan($id)
     //update users info
     public function edituser(Request $request)
     {
-        $targetUser = User::findOrFail($request->input('user_id'));
+        // Validate the reference before loading the record and normalize fields
+        // that can legitimately contain either digits or letters.
+        $id = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+        $targetUser = User::findOrFail($id['user_id']);
+        FlexibleTextInput::normalizeRequest($request, [
+            'name', 'email', 'username', 'phone', 'country', 'ref_link',
+        ]);
 
         $data = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
@@ -589,48 +598,57 @@ public function deleteloan($id)
 
         //numberoftrades
 
-    public function  numberoftrades(Request $request)
+    public function numberoftrades(Request $request)
     {
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'numberoftrades' => ['required', 'integer', 'min:0'],
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'numberoftrades' => $request['numberoftrades'],
+        User::whereKey($data['user_id'])->update([
+            'numberoftrades' => $data['numberoftrades'],
+        ]);
 
-
-
-            ]);
-        return redirect()->back()->with('success', 'User number of trades before withdrawal updated Successfully!');
-    }
-//user tax
-
-
-public function withdrawalcode(Request $request)
-    {
-
-        User::where('id', $request['user_id'])
-            ->update([
-
-                'withdrawal_code' => $request['withdrawal_code'],
-                 'user_withdrawalcode' => $request['user_withdrawalcode'],
-
-
-            ]);
-        return redirect()->back()->with('success', 'User Withrawal Code  details updated Successfully!');
+        return redirect()->back()->with('success', 'Withdrawal trade requirement updated successfully!');
     }
 
- public function usertax(Request $request)
+    public function withdrawalcode(Request $request)
     {
+        FlexibleTextInput::normalizeRequest($request, [
+            'withdrawal_code', 'user_withdrawalcode',
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'taxtype' => $request['taxtype'],
-                'taxamount' => $request['taxamount'],
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'withdrawal_code' => ['nullable', 'string', 'max:191'],
+            'user_withdrawalcode' => ['nullable', 'string', 'max:191'],
+        ]);
 
+        User::whereKey($data['user_id'])->update([
+            'withdrawal_code' => $data['withdrawal_code'] ?? null,
+            'user_withdrawalcode' => $data['user_withdrawalcode'] ?? null,
+        ]);
 
-            ]);
-        return redirect()->back()->with('success', 'User Tax details updated Successfully!');
+        return redirect()->back()->with('success', 'Withdrawal code details updated successfully!');
     }
 
+    public function usertax(Request $request)
+    {
+        FlexibleTextInput::normalizeRequest($request, ['taxtype']);
+
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'taxtype' => ['nullable', 'string', 'max:191'],
+            'taxamount' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        User::whereKey($data['user_id'])->update([
+            'taxtype' => $data['taxtype'] ?? null,
+            'taxamount' => $data['taxamount'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'User tax details updated successfully!');
+    }
 
     public function notifyuser(Request $request)
     {
