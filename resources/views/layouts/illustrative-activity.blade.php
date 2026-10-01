@@ -195,8 +195,7 @@
                 action.phrases[sample.person % action.phrases.length](amountText) + '.';
             container.hidden = false;
 
-            schedule(6500);
-            // A separate callback hides this toast before the next example.
+            // Hide the current example before scheduling the next one.
             if (timer) clearTimeout(timer);
             timer = setTimeout(function () {
                 container.hidden = true;
