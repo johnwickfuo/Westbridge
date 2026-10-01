@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Mail\WelcomeEmail;
 use App\Models\User;
 use App\Models\CryptoAccount;
+use App\Support\FlexibleTextInput;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
@@ -18,6 +19,12 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input)
     {
+        // JSON/mobile clients may provide a numerical phone or reference.
+        // These are text fields, and should not fail on their PHP type alone.
+        $input = FlexibleTextInput::normalize($input, [
+            'username', 'name', 'country', 'phone',
+        ]);
+
         $data = Validator::make($input, [
             'username' => ['required', 'string', 'alpha_dash', 'max:191', 'unique:users,username'],
             'name' => ['required', 'string', 'max:191'],
