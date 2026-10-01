@@ -67,37 +67,6 @@
 </div>
 @endif
 
-<!-- Notify Alert -->
-@if (Auth::check() && Auth::user()->notify_status == 'on' && Auth::user()->notify)
-<div x-data="{ show: true }"
-     x-show="show"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0 transform translate-y-2"
-     x-transition:enter-end="opacity-100 transform translate-y-0"
-     x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100 transform translate-y-0"
-     x-transition:leave-end="opacity-0 transform translate-y-2"
-     class="relative bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-500 rounded-xl p-5 mb-6 shadow-lg backdrop-blur-sm">
-    <div class="flex items-start justify-between">
-        <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center">
-                    <i data-lucide="bell" class="w-5 h-5 text-amber-600"></i>
-                </div>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h4 class="text-sm font-semibold text-amber-800 mb-1">Notification</h4>
-                <p class="text-sm text-amber-700 leading-relaxed">{{ Auth::user()->notify }}</p>
-            </div>
-        </div>
-        <button @click="show = false"
-                class="flex-shrink-0 ml-4 p-2 text-amber-400 hover:text-amber-600 hover:bg-amber-500/10 rounded-lg transition-all duration-200">
-            <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-    </div>
-</div>
-@endif
-
 <!-- Signal Alert -->
 @if(Auth::check() && Auth::user()->signal_status == 'on' && Auth::user()->user_signal)
 <div x-data="{ show: true }"
