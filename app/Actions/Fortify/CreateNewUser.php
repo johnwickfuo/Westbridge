@@ -51,10 +51,15 @@ class CreateNewUser implements CreatesNewUsers
 
         request()->session()->forget('ref_by');
 
+        // Send one welcome message after the account and wallet are created.
+        // Email transport errors must be logged without undoing a valid signup.
         try {
             Mail::to($user->email)->send(new WelcomeEmail($user));
-        } catch (\Exception $e) {
-            \Log::error('Failed to send welcome email for user ID '.$user->id.': '.$e->getMessage());
+        } catch (\Throwable $e) {
+            \Log::error('Welcome email could not be sent after registration.', [
+                'user_id' => $user->id,
+                'exception' => $e,
+            ]);
         }
 
         return $user;
