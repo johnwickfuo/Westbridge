@@ -4,97 +4,57 @@ namespace App\Actions\Fortify;
 
 use App\Mail\WelcomeEmail;
 use App\Models\User;
-use App\Models\Settings;
-use App\Models\Agent;
 use App\Models\CryptoAccount;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Laravel\Jetstream\Jetstream;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    use PasswordValidationRules;
-
     /**
-     * Validate and create a newly registered user.
-     *
-     * @param  array  $input
-     * @return \App\Models\User
+     * The public registration form has exactly six fields. Currency is always
+     * initialized to USD, independently of site-wide display preferences.
      */
     public function create(array $input)
     {
-        $settings = Settings::where('id', '1')->first();
-        $request = request();
-        if ($settings->captcha == "true") {
-            Validator::make($input, [
-                'name' => ['required', 'string', 'max:255'],
-                'username' => ['required', 'unique:users,username'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'password' => $this->passwordRules(),
-                'g-recaptcha-response' => 'required|captcha',
-                'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['required', 'accepted'] : '',
-            ])->validate();
-        } else {
-            Validator::make($input, [
-                'name' => ['required', 'string', 'max:255'],
-                'username' => ['required', 'unique:users,username'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'captcha' => ['required', function ($attribute, $value, $fail) use ($input) {
-        if ($value !== $input['captcha_confirmation']) {
-            $fail('The CAPTCHA code does not match.');
-        }
-    }],
+        $data = Validator::make($input, [
+            'username' => ['required', 'string', 'alpha_dash', 'max:191', 'unique:users,username'],
+            'name' => ['required', 'string', 'max:191'],
+            'email' => ['required', 'string', 'email', 'max:191', 'unique:users,email'],
+            'country' => ['required', 'string', 'max:191'],
+            'phone' => ['required', 'string', 'max:191'],
+            'password' => ['required', 'string', 'min:8'],
+        ])->validate();
 
-                'password' => $this->passwordRules(),
-                'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['required', 'accepted'] : '',
-            ])->validate();
-        }
-
-        if($request['currency']==Null){
-
-            $currency= '$';
-        }else{
-            $currency = $input['currency'];
-        }
-
-        if (session('ref_by')) {
-            $ref_by = session('ref_by');
-            $user = User::where('username', $ref_by)->first();
-            $ref_by_id = $user->id;
-        } else {
-            if (!empty($input['ref_by'])) {
-                $sponsor = User::where('username', $input['ref_by'])->first();
-                $ref_by_id = $sponsor->id;
-            } else {
-                $ref_by_id = NULL;
-            }
-        }
+        // Preserve tracked referral links without asking for an extra signup field.
+        $referrer = session('ref_by')
+            ? User::where('username', session('ref_by'))->first()
+            : null;
 
         $user = User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'phone' => $input['phone'],
-            'username' => $input['username'],
-            'country' => $input['country'],
-            'ref_by' => $ref_by_id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'username' => $data['username'],
+            'country' => $data['country'],
+            'ref_by' => $referrer ? $referrer->id : null,
+            'currency' => '$',
+            's_currency' => 'USD',
             'status' => 'active',
-            // 'currency'=> $currency,
-            'password' => Hash::make($input['password']),
+            'password' => Hash::make($data['password']),
         ]);
 
-        $cryptoaccnt = new CryptoAccount();
-        $cryptoaccnt->user_id = $user->id;
-        $cryptoaccnt->save();
-        $request->session()->forget('ref_by');
+        $account = new CryptoAccount();
+        $account->user_id = $user->id;
+        $account->save();
+
+        request()->session()->forget('ref_by');
 
         try {
             Mail::to($user->email)->send(new WelcomeEmail($user));
         } catch (\Exception $e) {
-            \Log::error('Failed to send welcome email to user: ' . $user->email . '. Error: ' . $e->getMessage());
+            \Log::error('Failed to send welcome email for user ID '.$user->id.': '.$e->getMessage());
         }
 
         return $user;
