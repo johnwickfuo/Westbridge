@@ -30,6 +30,8 @@ use App\Traits\PingServer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+use App\Support\DisplayCurrencies;
+use Illuminate\Validation\Rule;
 class ManageUsersController extends Controller
 {
     use PingServer;
@@ -558,22 +560,32 @@ public function deleteloan($id)
     //update users info
     public function edituser(Request $request)
     {
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'name' => ['required', 'string', 'max:191'],
+            'email' => ['required', 'email', 'max:191', Rule::unique('users', 'email')->ignore($request->user_id)],
+            'username' => ['required', 'string', 'alpha_dash', 'max:191', Rule::unique('users', 'username')->ignore($request->user_id)],
+            'phone' => ['required', 'string', 'max:191'],
+            'country' => ['nullable', 'string', 'max:191'],
+            'ref_link' => ['nullable', 'string', 'max:191'],
+            'currency' => ['required', 'string', Rule::in(array_keys(DisplayCurrencies::all()))],
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'name' => $request['name'],
-                'email' => $request['email'],
-                'country' => $request['country'],
-                'username' => $request['username'],
-                'phone' => $request['phone'],
-                'ref_link' => $request['ref_link'],
-                'currency'=>$request['currency'],
-                's_currency'=>$request['s_currency'],
-            ]);
-        return redirect()->back()->with('success', 'User details updated Successfully!');
+        User::whereKey($data['user_id'])->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'country' => $data['country'] ?? null,
+            'username' => $data['username'],
+            'phone' => $data['phone'],
+            'ref_link' => $data['ref_link'] ?? null,
+            'currency' => DisplayCurrencies::symbol($data['currency']),
+            's_currency' => $data['currency'],
+        ]);
+
+        return redirect()->back()->with('success', 'User details updated successfully!');
     }
 
-    //numberoftrades
+        //numberoftrades
 
     public function  numberoftrades(Request $request)
     {
