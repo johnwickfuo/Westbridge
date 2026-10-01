@@ -57,6 +57,13 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="repeat_count">Dashboard popup appearances</label>
+                        <input id="repeat_count" type="number" name="repeat_count" value="{{ old('repeat_count', 1) }}" min="1" max="100" step="1" class="form-control" required>
+                        <small class="form-text text-muted">For example, 5 shows the popup once per dashboard load for the next five visits. This does not remove it from the inbox.</small>
+                        @error('repeat_count') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="form-group">
                         <button type="submit" class="btn btn-primary">Send Message</button>
                     </div>
                 </form>
