@@ -1,0 +1,226 @@
+
+
+
+
+
+<div class="wrapper-content">
+  <div class="container" style="max-width:1300px">
+    <!-- style="max-width:1400px" -->
+
+
+    <div class="row  align-items-end  customer-profile-cover">
+
+    <figure class="background"><img src="{{$settings->site_address}}/temp/custom/img/kk2.gif" alt="Social cover image"> </figure>
+    <div class="container mb-2"><br>
+        <div class="row  align-items-center p-2" STYLE="margin-top:-20px">
+            <figure class="social-profile-pic"><a href="{{ url('dashboard') }}"><img src="{{$settings->site_address}}/temp/custom/img/profile/default.jpg" alt=""></a></figure>
+            <div class="col-sm-16 col-lg-4 col-xl-4  profile-name">
+                <h2>{{ Auth::user()->name }} <i style="color:green" class="fa fa-star"></i>
+                    </h2>
+                <p>{{ Auth::user()->country }}</p>
+                <a href="{{ url('dashboard/deposits') }}"><button class="btn btn-success ">Deposit</button></a>
+                <a href="{{ url('dashboard/withdrawals') }}"><button class="btn btn-success  ml-1">Withdraw</button></a>
+            </div>
+            <x-danger-alert />
+    <x-success-alert />
+                            <div class="col-16 col-sm-16 col-lg-9 col-xl-9 text-right d-flex">
+                    <div class="col col-sm-8 col-lg col-xl-8">
+                        <h4>Investment</h4>
+                        <h3><span class="text-warning">{{$settings->currency}}{{ number_format(Auth::user()->account_bal, 2, '.', ',')}}</span></h3>
+                        <h4>Signal Fee</h4>
+                        <h3><span class="text-warning">{{$settings->currency}}{{ number_format(Auth::user()->bonus, 2, '.', ',')}}</span></h3>
+                    </div>
+                    <div class="col col-sm-8 col-lg col-xl-8">
+                        <h4>Total Balance</h4>
+                        <h3><span class="text-warning">{{$settings->currency}}{{ number_format(Auth::user()->account_bal + Auth::user()->roi, 2, '.', ',')}}</span></h3>
+                        <h4>Total Earning</h4>
+                        <h3><span class="text-warning">{{$settings->currency}}{{ number_format(Auth::user()->roi, 2, '.', ',')}}</span></h3>
+                        <h4>Refferal Bonus</h4>
+                        <h3><span class="text-warning">{{$settings->currency}}{{ number_format(Auth::user()->bonus, 2, '.', ',')}}</span></h3>
+                    
+                    </div>
+                </div>
+                    </div>
+    </div>
+</div> 
+
+
+
+
+
+    <br><br>
+
+<title>{{Auth::user()->name}} | Dashboard</title>
+
+
+
+<!-- <div class="wrapper-content"> -->
+<div class="row" style="margin-top:-20px">
+     <div class="col-md-16 col-lg-16 col-xl-16">
+          <div class="activity-block success" id="bck">
+               <div class="media">
+                    <div class="media-body">
+                         <a href="{{ url('dashboard/accounthistory') }}"><button type="button" class="btn btn-success"><i class="fa fa-exchange"></i> Trading History</button></a>
+                         <a href="{{ route('profile') }}"><button type="button" style="float:right" class="btn btn-danger"><i class="fa fa-gears"></i> Settings</button></a>
+                         <hr>
+                         <a href="{ url('dashboard/deposit_hist') }}"><button type="button" style="float:center" class="btn btn-success"><i class="fa fa-exchange"></i> View Transactions</button></a>
+                                                       <a href="signal"><button type="button" style="float:right" class="btn btn-success"><i class="fa fa-signal"></i> Signal Purchase</button></a>
+                                                  <br>
+                         <hr> 
+                         <a style="float:left;font-size:20px;font-weight:bold">Registration Date</a>
+                         <a style="float:right;font-size:18px;letter-spacing:1px">{{$Auth::user()->created_at}}</a>
+                         <br>
+                         <hr>
+                         <a style="float:left;font-size:20px;font-weight:bold">Total Referrals</a>
+                         <a style="float:right;font-size:18px;letter-spacing:1px">None</a>
+                         <br>
+                         <hr>
+                         <a style="float:left;font-size:20px;font-weight:bold">Package</a>
+                         <a style="float:right;font-size:18px;letter-spacing:1px">None</a>
+                         <br>
+                         <hr>
+                         <a style="float:left;font-size:20px;font-weight:bold"> Signal </a>
+                         <a style="float:right;font-size:18px;letter-spacing:3px">None</a>
+                         <br>
+                         <hr>
+                         <a style="float:left;font-size:20px;font-weight:bold">Account Type</a>
+                         <a style="float:right;font-size:18px;letter-spacing:1px">Binary Option Trading<br></a>
+                         <br><br>
+                         <hr>
+                         <a style="float:left;font-size:20px;font-weight:bold">Account Status</a>
+                         <a style="float:right;font-size:20px;letter-spacing:3px"><b style="color:white;background:#070;padding:4px 7px";border-radius:10px>Verified</b></a>
+                         <br>
+                         <hr>
+                         <h6 style="float:left">
+                              NOTIFICATION:
+                         </h6><br>
+                         <marquee></marquee>
+                    </div>
+                    <i class="fa ffa fa-"></i>
+               </div>
+               <br>
+               <div class="row">
+                    <div class="progress ">
+                         <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 39%;"><span class="trackerball"></span></div>
+                    </div>
+               </div>
+               <i class="bg-icon text-center fa fa-user"></i>
+          </div>
+     </div>
+</div>
+<br><br>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="row" style="margin-top:-50px">
+     <div class="col-md-16 col-lg-16 col-xl-16">
+
+                         <!-- TradingView Widget BEGIN -->
+               <div class="tradingview-widget-container">
+                    <div id="tradingview_e705a" style="height:550px"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                    <script type="text/javascript">
+                         new TradingView.widget({
+                              "autosize": true,
+                              "symbol": "NASDAQ:AAPL",
+                              "interval": "1",
+                              "timezone": "America/New_York",
+                              "theme": "dark",
+                              "style": "1",
+                              "locale": "en",
+                              "toolbar_bg": "#f1f3f6",
+                              "enable_publishing": false,
+                              "hide_side_toolbar": false,
+                              "allow_symbol_change": true,
+                              "details": true,
+                              "studies": [
+                                   "AwesomeOscillator@tv-basicstudies",
+                                   "MACD@tv-basicstudies"
+                              ],
+                              "container_id": "tradingview_e705a"
+                         });
+                    </script>
+               </div>
+               <!-- TradingView Widget END -->
+               </div>
+</div><br><br>
+
+
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="form-group row">
+      <div class="col-6">
+        <button type="button" onclick="referralFunction()" class="btn btn-success">Copy Referral Link</button>
+      </div>
+      <div class="col-10">
+        <input type="text" style="color:black" class="form-control" id="referral_link" value="{{Auth::user()->ref_link}}" readonly="">
+      </div>
+    </div>
+  </div>
+
+
+
+  <script>
+    function referralFunction() {
+      var copyReferral = document.getElementById("referral_link");
+      copyReferral.select();
+      copyReferral.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      Swal.fire('', '<b>Referral Link Copied :</b> ' + copyReferral.value + '', '', '');
+    }
+  </script>
+
+
+
+
+
+
+  <!-- TradingView Widget BEGIN -->
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+      {
+        "symbols": [{
+            "proName": "FOREXCOM:SPXUSD",
+            "title": "S&P 500"
+          },
+          {
+            "proName": "FOREXCOM:NSXUSD",
+            "title": "Nasdaq 100"
+          },
+          {
+            "proName": "FX_IDC:EURUSD",
+            "title": "EUR/USD"
+          },
+          {
+            "proName": "BITSTAMP:BTCUSD",
+            "title": "BTC/USD"
+          },
+          {
+            "proName": "BITSTAMP:ETHUSD",
+            "title": "ETH/USD"
+          }
+        ],
+        "showSymbolLogo": true,
+        "colorTheme": "dark",
+        "isTransparent": false,
+        "displayMode": "adaptive",
+        "locale": "en"
+      }
+    </script>
+  </div>
+  <!-- TradingView Widget END -->
+
+
+
+  
