@@ -5,34 +5,32 @@ namespace App\Mail;
 use App\Models\Settings;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 class WelcomeEmail extends Mailable
 {
     use Queueable, SerializesModels;
+
     public $user;
 
-    /**
-     * Create a new message instance.
-     *
-     * @return void
-     */
     public function __construct(User $user)
     {
         $this->user = $user;
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * The welcome message is sent once by the Fortify registration action.
+     * It is sent synchronously so no queue worker is required.
      */
     public function build()
     {
-        $settings = Settings::find(1);
+        $siteName = Settings::whereKey(1)->value('site_name') ?: config('app.name', 'Westbridge');
 
-        return $this->markdown('emails.welcome')->subject("Welcome to $settings->site_name");
+        return $this->subject('Welcome to '.$siteName)
+            ->markdown('emails.welcome', [
+                'siteName' => $siteName,
+                'dashboardUrl' => url('/dashboard'),
+            ]);
     }
 }
