@@ -532,20 +532,15 @@
                          <input class="form-control  " value="{{ $user->country }}" type="text" name="country">
                      </div>
 
-                     <div class="form-group text-black-50 mt-3 ">
-                <input name="s_currency" value="{{$user->currency}}" id="s_c" type="hidden">
-                <div class="form-group ">
-                    <select name="currency" id="select_c" class="form-control   select2" onchange="changecurr()"
-                        style="width: 100%">
-                        {{-- <option disabled>Select Currency </option> --}}
-                        <option value="{{$user->currency}}">{{ $user->currency }}</option>
-                        @foreach ($currencies as $key => $currency)
-                            <option id="{{ $key }}" value="<?php echo html_entity_decode($currency); ?>">
-                                {{ $key . ' (' . html_entity_decode($currency) . ')' }}</option>
-                        @endforeach
-                    </select>
-            </div>
-        </div>
+                     <div class="form-group mt-3">
+                         <label for="admin-user-currency">Display currency</label>
+                         <select name="currency" id="admin-user-currency" class="form-control" required>
+                             @foreach(\App\Support\DisplayCurrencies::all() as $code => $symbol)
+                                 <option value="{{ $code }}" @selected(($user->s_currency ?: 'USD') === $code)>{{ $code }} ({{ $symbol }})</option>
+                             @endforeach
+                         </select>
+                         <small>Changes display preference only; underlying balances remain USD.</small>
+                     </div>
                      <div class="form-group">
                          <h5 class=" ">Referral link</h5>
                          <input class="form-control  " value="{{ $user->ref_link }}" type="text" name="ref_link"
