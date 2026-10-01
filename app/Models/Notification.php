@@ -21,6 +21,8 @@ class Notification extends Model
         'message',
         'type',      // 'deposit', 'withdrawal', 'plan_purchase', 'bot_purchase', 'profit', 'admin_message', 'login'
         'is_read',
+        'popup_limit',
+        'popup_shown',
         'source_id', // ID related to the transaction, plan, bot, etc.
         'source_type' // Model class related to the transaction
     ];
@@ -32,6 +34,8 @@ class Notification extends Model
      */
     protected $casts = [
         'is_read' => 'boolean',
+        'popup_limit' => 'integer',
+        'popup_shown' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

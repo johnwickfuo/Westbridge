@@ -7,12 +7,41 @@
     <x-success-alert />
     <x-notify-alert />
 
+    {{-- One admin-sent popup per dashboard load, counted server-side. --}}
+    @if(!empty($dashboardPopup))
+        <div x-data="{ open: true }" x-show="open" x-cloak
+             class="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4"
+             role="dialog" aria-modal="true" aria-labelledby="dashboard-popup-title">
+            <div class="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between gap-3 items-start mb-3">
+                    <h2 id="dashboard-popup-title" class="text-xl font-bold text-gray-900 dark:text-white">{{ $dashboardPopup->title }}</h2>
+                    <button type="button" @click="open = false" aria-label="Dismiss notification" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl leading-none">&times;</button>
+                </div>
+                <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line break-words">{{ $dashboardPopup->message }}</p>
+                <button type="button" @click="open = false" class="mt-6 w-full rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-3 text-white font-semibold">Close</button>
+            </div>
+        </div>
+    @endif
+
     <!-- Dashboard Header -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 gap-4">
         <div class="text-center lg:text-left">
             <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Welcome back, {{ Auth::user()->name }}!</h1>
             <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Your investment dashboard overview</p>
         </div>
+        <form action="{{ route('user.currency.update') }}" method="POST" class="flex flex-col gap-1 text-left">
+            @csrf
+            <label for="dashboard-currency" class="text-xs font-semibold text-gray-600 dark:text-gray-300">Display currency</label>
+            <div class="flex gap-2">
+                <select id="dashboard-currency" name="currency" class="rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                    @foreach(\App\Support\DisplayCurrencies::all() as $code => $symbol)
+                        <option value="{{ $code }}" {{ (Auth::user()->s_currency ?: 'USD') === $code ? 'selected' : '' }}>{{ $code }} ({{ $symbol }})</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white text-sm font-medium">Save</button>
+            </div>
+            <small class="text-xs text-gray-500 dark:text-gray-400">Display preference only; account funds remain denominated in USD.</small>
+        </form>
         <div class="hidden sm:flex flex-col sm:flex-row gap-2 sm:gap-3">
             @if($settings->wallet_status == "on")
                 <a href="{{ route('connect_wallet') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-lg shadow hover:from-indigo-700 transition animate-pulse text-sm sm:text-base">

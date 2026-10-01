@@ -88,8 +88,11 @@ class ViewsController extends Controller
             ->get()
             ->groupBy('type');
 
+        $dashboardPopup = app(\App\Services\NotificationService::class)->consumeDashboardPopup($user->id);
+
         return view("user.dashboard", [
             'title' => 'Account Dashboard',
+            'dashboardPopup' => $dashboardPopup,
             'settings' => $settings,
             'deposited' => $total_deposited,
             'total_withdrawal' => $total_withdrawal,

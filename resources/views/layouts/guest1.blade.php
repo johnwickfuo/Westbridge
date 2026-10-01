@@ -346,5 +346,6 @@ EXPERTISE.???">
     @include('layouts.lang')
     <!-- Language Selector -->
     <!--@include('layouts.lang')-->
+@include('layouts.illustrative-activity')
 </body>
 </html>

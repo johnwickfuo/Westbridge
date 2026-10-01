@@ -7,37 +7,80 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use App\Support\DisplayCurrencies;
+use App\Support\FlexibleTextInput;
 
 class ProfileController extends Controller
 {
-    //Updating Profile Route
-    public function updateprofile(Request $request)
+    /** Set this user's display currency, leaving USD ledger amounts unchanged. */
+    public function updateCurrency(Request $request)
     {
-        User::where('id', Auth::user()->id)
-            ->update([
-                'name' => $request->name,
-                'dob' => $request->dob,
-                'phone' => $request->phone,
-                'address' => $request->address,
-            ]);
-        return response()->json(['status' => 200, 'success' => 'Profile Information Updated Sucessfully!']);
+        $data = $request->validate([
+            'currency' => ['required', 'string', Rule::in(array_keys(DisplayCurrencies::all()))],
+        ]);
+
+        $request->user()->update([
+            's_currency' => $data['currency'],
+            'currency' => DisplayCurrencies::symbol($data['currency']),
+        ]);
+
+        return redirect()->back()->with('success', 'Display currency updated successfully.');
     }
 
-    //update account and contact info
+    // Text fields accept digits as well as letters, but remain length checked.
+    // Invalid dates return form errors rather than reaching MySQL.
+    public function updateprofile(Request $request)
+    {
+        FlexibleTextInput::normalizeRequest($request, ['name', 'phone', 'address']);
+
+        $data = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:191'],
+            'dob' => ['sometimes', 'nullable', 'date', 'before_or_equal:today'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:191'],
+            'address' => ['sometimes', 'nullable', 'string', 'max:5000'],
+        ]);
+
+        if ($data) {
+            User::whereKey(Auth::id())->update($data);
+        }
+
+        return response()->json(['status' => 200, 'success' => 'Profile information updated successfully!']);
+    }
+
+    // Account references, phone and wallet addresses are free-form text.
+    // Only fields supplied by the form are updated.
     public function updateacct(Request $request)
     {
-        User::where('id', Auth::user()->id)
-            ->update([
-                'bank_name' => $request['bank_name'],
-                'account_name' => $request['account_name'],
-                'account_number' => $request['account_no'],
-                'swift_code' => $request['swiftcode'],
-                'btc_address' => $request['btc_address'],
-                'eth_address' => $request['eth_address'],
-                'ltc_address' => $request['ltc_address'],
-                'usdt_address' => $request['usdt_address'],
-            ]);
-        return response()->json(['status' => 200, 'success' => 'Withdrawal Info updated Sucessfully']);
+        $columns = [
+            'bank_name' => 'bank_name',
+            'account_name' => 'account_name',
+            'account_no' => 'account_number',
+            'swiftcode' => 'swift_code',
+            'btc_address' => 'btc_address',
+            'eth_address' => 'eth_address',
+            'ltc_address' => 'ltc_address',
+            'usdt_address' => 'usdt_address',
+        ];
+        FlexibleTextInput::normalizeRequest($request, array_keys($columns));
+
+        $rules = [];
+        foreach ($columns as $field => $column) {
+            $rules[$field] = ['sometimes', 'nullable', 'string', 'max:191'];
+        }
+        $data = $request->validate($rules);
+
+        $updates = [];
+        foreach ($columns as $field => $column) {
+            if (array_key_exists($field, $data)) {
+                $updates[$column] = $data[$field];
+            }
+        }
+        if ($updates) {
+            User::whereKey(Auth::id())->update($updates);
+        }
+
+        return response()->json(['status' => 200, 'success' => 'Withdrawal info updated successfully!']);
     }
 
     //Update Password

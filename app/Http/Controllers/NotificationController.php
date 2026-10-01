@@ -151,14 +151,16 @@ class NotificationController extends Controller
             'user_id' => 'required|integer|exists:users,id',
             'title' => 'required|string|max:255',
             'message' => 'required|string',
-            'type' => 'required|string|in:info,success,warning,danger'
+            'type' => 'required|string|in:info,success,warning,danger',
+            'repeat_count' => 'required|integer|min:1|max:100'
         ]);
 
         $notification = $this->notificationService->sendAdminMessageToUser(
             $request->user_id,
             $request->title,
             $request->message,
-            $request->type
+            $request->type,
+            (int) $request->repeat_count
         );
 
         if ($request->expectsJson()) {

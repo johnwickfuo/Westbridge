@@ -30,6 +30,9 @@ use App\Traits\PingServer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+use App\Support\DisplayCurrencies;
+use App\Support\FlexibleTextInput;
+use Illuminate\Validation\Rule;
 class ManageUsersController extends Controller
 {
     use PingServer;
@@ -558,102 +561,118 @@ public function deleteloan($id)
     //update users info
     public function edituser(Request $request)
     {
+        // Validate the reference before loading the record and normalize fields
+        // that can legitimately contain either digits or letters.
+        $id = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+        $targetUser = User::findOrFail($id['user_id']);
+        FlexibleTextInput::normalizeRequest($request, [
+            'name', 'email', 'username', 'phone', 'country', 'ref_link',
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'name' => $request['name'],
-                'email' => $request['email'],
-                'country' => $request['country'],
-                'username' => $request['username'],
-                'phone' => $request['phone'],
-                'ref_link' => $request['ref_link'],
-                'currency'=>$request['currency'],
-                's_currency'=>$request['s_currency'],
-            ]);
-        return redirect()->back()->with('success', 'User details updated Successfully!');
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'name' => ['required', 'string', 'max:191'],
+            'email' => ['required', 'email', 'max:191', Rule::unique('users', 'email')->ignore($targetUser->id)],
+            'username' => ['required', 'string', 'alpha_dash', 'max:191', Rule::unique('users', 'username')->ignore($targetUser->id)],
+            'phone' => ['required', 'string', 'max:191'],
+            'country' => ['nullable', 'string', 'max:191'],
+            'ref_link' => ['nullable', 'string', 'max:191'],
+            'currency' => ['required', 'string', Rule::in(array_keys(DisplayCurrencies::all()))],
+        ]);
+
+        $targetUser->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'country' => $data['country'] ?? null,
+            'username' => $data['username'],
+            'phone' => $data['phone'],
+            'ref_link' => $data['ref_link'] ?? null,
+            'currency' => DisplayCurrencies::symbol($data['currency']),
+            's_currency' => $data['currency'],
+        ]);
+
+        return redirect()->back()->with('success', 'User details updated successfully!');
     }
 
-    //numberoftrades
+        //numberoftrades
 
-    public function  numberoftrades(Request $request)
+    public function numberoftrades(Request $request)
     {
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'numberoftrades' => ['required', 'integer', 'min:0'],
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'numberoftrades' => $request['numberoftrades'],
+        User::whereKey($data['user_id'])->update([
+            'numberoftrades' => $data['numberoftrades'],
+        ]);
 
-
-
-            ]);
-        return redirect()->back()->with('success', 'User number of trades before withdrawal updated Successfully!');
+        return redirect()->back()->with('success', 'Withdrawal trade requirement updated successfully!');
     }
-//user tax
 
-
-public function withdrawalcode(Request $request)
+    public function withdrawalcode(Request $request)
     {
+        FlexibleTextInput::normalizeRequest($request, [
+            'withdrawal_code', 'user_withdrawalcode',
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'withdrawal_code' => ['nullable', 'string', 'max:191'],
+            'user_withdrawalcode' => ['nullable', 'string', 'max:191'],
+        ]);
 
-                'withdrawal_code' => $request['withdrawal_code'],
-                 'user_withdrawalcode' => $request['user_withdrawalcode'],
+        User::whereKey($data['user_id'])->update([
+            'withdrawal_code' => $data['withdrawal_code'] ?? null,
+            'user_withdrawalcode' => $data['user_withdrawalcode'] ?? null,
+        ]);
 
-
-            ]);
-        return redirect()->back()->with('success', 'User Withrawal Code  details updated Successfully!');
+        return redirect()->back()->with('success', 'Withdrawal code details updated successfully!');
     }
 
- public function usertax(Request $request)
+    public function usertax(Request $request)
     {
+        FlexibleTextInput::normalizeRequest($request, ['taxtype']);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'taxtype' => $request['taxtype'],
-                'taxamount' => $request['taxamount'],
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'taxtype' => ['nullable', 'string', 'max:191'],
+            'taxamount' => ['nullable', 'numeric', 'min:0'],
+        ]);
 
+        User::whereKey($data['user_id'])->update([
+            'taxtype' => $data['taxtype'] ?? null,
+            'taxamount' => $data['taxamount'] ?? null,
+        ]);
 
-            ]);
-        return redirect()->back()->with('success', 'User Tax details updated Successfully!');
+        return redirect()->back()->with('success', 'User tax details updated successfully!');
     }
-
 
     public function notifyuser(Request $request)
     {
-        // Initialize notification service
-        $notificationService = app(\App\Services\NotificationService::class);
-        $user = User::where('id', $request['user_id'])->first();
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'notify' => ['required', 'string', 'max:5000'],
+            'repeat_count' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'notify' => $request['notify'],
-                'notify_status' => $request['notifystatus'],
-            ]);
-
-        // Create user notification about plan upgrade status
-        $notificationService->createUserNotification(
-            $request['user_id'],
+        $notification = app(\App\Services\NotificationService::class)->sendAdminMessageToUser(
+            $data['user_id'],
             'Notification',
-            "{$request['notify']}",
-            'info'
-        );
-
-        // Create admin notification
-        $notificationService->createAdminNotification(
-            Auth::guard('admin')->id(),
-            'User Plan Upgrade Updated',
-            "Admin " . Auth::guard('admin')->user()->name . " updated  notification for user {$user->name}.",
+            $data['notify'],
             'info',
-            $request['user_id'],
-            'App\\Models\\User'
+            (int) $data['repeat_count']
         );
 
-        return redirect()->back()->with('success', 'User notification Successfully!');
+        return redirect()->back()->with(
+            $notification ? 'success' : 'error',
+            $notification ? 'Dashboard notification sent successfully!' : 'Failed to send notification.'
+        );
     }
 
-
-
-    public function upgradesignalstatus(Request $request)
+        public function upgradesignalstatus(Request $request)
     {
         // Initialize notification service
         $notificationService = app(\App\Services\NotificationService::class);

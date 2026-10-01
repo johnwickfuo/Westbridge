@@ -21,7 +21,7 @@ class DepositController extends Controller
 
     public function getmethod($id)
     {
-        $methodname =  Wdmethod::where('id', $id)->first();
+        $methodname = Wdmethod::findOrFail($id);
         return response()->json($methodname->name);
     }
 
@@ -29,11 +29,17 @@ class DepositController extends Controller
     public function newdeposit(Request $request)
     {
 
-         if($request->payment_method== NULL){
-            $request->payment_method= 'Bitcoin';
-        }
+        $request->merge([
+            'payment_method' => $request->input('payment_method') ?: 'Bitcoin',
+        ]);
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'payment_method' => ['required', 'string', 'exists:wdmethods,name'],
+            'asset' => ['nullable', 'string', 'max:191'],
+        ]);
+
         $settings = Settings::where('id', '1')->first();
-        $methodname =  Wdmethod::where('name', $request->payment_method)->first();
+        $methodname = Wdmethod::where('name', $data['payment_method'])->firstOrFail();
 
 
 
@@ -86,7 +92,11 @@ class DepositController extends Controller
     //payment route
     public function payment(Request $request)
     {
-        $methodname =  Wdmethod::firstWhere('name', $request->session()->get('payment_mode'));
+        $methodname = Wdmethod::firstWhere('name', $request->session()->get('payment_mode'));
+        if (!$methodname || !is_numeric($request->session()->get('amount'))) {
+            return redirect()->route('deposits')
+                ->with('error', 'The previous deposit details are missing or invalid. Please start again.');
+        }
         return view("user.payment")
             ->with(array(
                 'amount' => $request->session()->get('amount'),
@@ -178,11 +188,15 @@ class DepositController extends Controller
     public function savedeposit(Request $request)
     {
 
-        $this->validate($request, [
-            'proof' => 'image|mimes:jpg,jpeg,png|max:1000',
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'paymethd_method' => ['required', 'string', 'exists:wdmethods,name'],
+            'asset' => ['nullable', 'string', 'max:191'],
+            'proof' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1000'],
         ]);
 
         $settings = Settings::where('id', '=', '1')->first();
+        $path = null;
 
         if ($request->hasfile('proof')) {
             $file = $request->file('proof');
@@ -198,12 +212,12 @@ class DepositController extends Controller
         }
 
         $dp = new Deposit();
-        $dp->amount = $request['amount'];
-        $dp->payment_mode = $request['paymethd_method'];
+        $dp->amount = $data['amount'];
+        $dp->payment_mode = $data['paymethd_method'];
         $dp->status = 'Pending';
         $dp->proof = $path;
         $dp->user = Auth::user()->id;
-        $dp->signals = $request['asset'];
+        $dp->signals = $data['asset'] ?? null;
         $dp->save();
 
         //get user

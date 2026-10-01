@@ -16,6 +16,7 @@ use App\Mail\WithdrawalStatus;
 use App\Traits\Coinpayment;
 use App\Traits\TemplateTrait;
 use App\Traits\NotificationTrait;
+use App\Support\FlexibleTextInput;
 
 class WithdrawalController extends Controller
 {
@@ -23,7 +24,10 @@ class WithdrawalController extends Controller
     //
     public function withdrawamount(Request $request)
     {
-        $request->session()->put('paymentmethod', $request->method);
+        $data = $request->validate([
+            'method' => ['required', 'string', 'exists:wdmethods,name'],
+        ]);
+        $request->session()->put('paymentmethod', $data['method']);
         return redirect()->route('withdrawfunds');
     }
 
@@ -33,7 +37,11 @@ class WithdrawalController extends Controller
 
         $paymethod = session('paymentmethod');
 
-        $checkmethod =  Wdmethod::where('name', $paymethod)->first();
+        $checkmethod = Wdmethod::where('name', $paymethod)->first();
+        if (!$checkmethod) {
+            return redirect()->route('withdrawalsdeposits')
+                ->with('error', 'Please select a valid withdrawal method first.');
+        }
         if ($checkmethod->defaultpay == "yes") {
             $default = true;
         } else {
@@ -100,6 +108,22 @@ class WithdrawalController extends Controller
 
     public function completewithdrawal(Request $request)
     {
+        // Invalid numbers and unexpected text fields must fail validation,
+        // not crash during balance calculations or reach MySQL unvalidated.
+        FlexibleTextInput::normalizeRequest($request, [
+            'otpcode', 'details', 'bank_name', 'account_name',
+            'swift_code', 'account_no',
+        ]);
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'method' => ['required', 'string', 'exists:wdmethods,name'],
+            'otpcode' => ['nullable', 'string', 'max:30'],
+            'details' => ['nullable', 'string', 'max:5000'],
+            'bank_name' => ['nullable', 'string', 'max:191'],
+            'account_name' => ['nullable', 'string', 'max:191'],
+            'swift_code' => ['nullable', 'string', 'max:191'],
+            'account_no' => ['nullable', 'string', 'max:191'],
+        ]);
 
         if (Auth::user()->sendotpemail == "Yes") {
             if ($request->otpcode != Auth::user()->withdrawotp) {
@@ -114,7 +138,7 @@ class WithdrawalController extends Controller
             }
         }
 
-        $method = Wdmethod::where('name', $request->method)->first();
+        $method = Wdmethod::where('name', $data['method'])->firstOrFail();
 
         if ($method->charges_type == 'percentage') {
             $charges = $request['amount'] * $method->charges_amount / 100;

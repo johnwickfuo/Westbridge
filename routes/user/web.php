@@ -56,6 +56,7 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('dashboard')->group(func
     Route::get('support', [ViewsController::class, 'support'])->name('support');
 
     Route::middleware('complete.kyc')->group(function () {
+        Route::post('display-currency', [ProfileController::class, 'updateCurrency'])->name('user.currency.update');
         Route::get('account-settings', [ViewsController::class, 'profile'])->name('profile');
         Route::get('accountdetails', [ViewsController::class, 'accountdetails'])->name('accountdetails');
         Route::get('notification', [ViewsController::class, 'notification'])->name('notification');

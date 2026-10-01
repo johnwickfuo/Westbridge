@@ -1268,5 +1268,6 @@ document.addEventListener('alpine:init', () => {
 @yield('scripts')
 @include('layouts.lang')
 @include('layouts.livechat')
+@include('layouts.illustrative-activity')
 </body>
 </html>
