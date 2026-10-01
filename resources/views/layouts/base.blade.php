@@ -732,5 +732,6 @@ s0.parentNode.insertBefore(s1,s0);
 </script>
 
 @include('layouts.livechat')
+@include('layouts.illustrative-activity')
 </body>
 </html>
