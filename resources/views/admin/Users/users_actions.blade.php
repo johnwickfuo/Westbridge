@@ -536,7 +536,7 @@
                          <label for="admin-user-currency">Display currency</label>
                          <select name="currency" id="admin-user-currency" class="form-control" required>
                              @foreach(\App\Support\DisplayCurrencies::all() as $code => $symbol)
-                                 <option value="{{ $code }}" @selected(($user->s_currency ?: 'USD') === $code)>{{ $code }} ({{ $symbol }})</option>
+                                 <option value="{{ $code }}" {{ ($user->s_currency ?: 'USD') === $code ? 'selected' : '' }}>{{ $code }} ({{ $symbol }})</option>
                              @endforeach
                          </select>
                          <small>Changes display preference only; underlying balances remain USD.</small>
