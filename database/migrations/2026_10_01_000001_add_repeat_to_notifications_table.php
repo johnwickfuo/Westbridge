@@ -8,16 +8,31 @@ class AddRepeatToNotificationsTable extends Migration
 {
     public function up()
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->unsignedInteger('popup_limit')->nullable()->after('is_read');
-            $table->unsignedInteger('popup_shown')->default(0)->after('popup_limit');
-        });
+        if (!Schema::hasColumn('notifications', 'popup_limit')) {
+            Schema::table('notifications', function (Blueprint $table) {
+                $table->unsignedInteger('popup_limit')->nullable()->after('is_read');
+            });
+        }
+
+        if (!Schema::hasColumn('notifications', 'popup_shown')) {
+            Schema::table('notifications', function (Blueprint $table) {
+                $table->unsignedInteger('popup_shown')->default(0)->after('popup_limit');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->dropColumn(['popup_limit', 'popup_shown']);
-        });
+        if (Schema::hasColumn('notifications', 'popup_shown')) {
+            Schema::table('notifications', function (Blueprint $table) {
+                $table->dropColumn('popup_shown');
+            });
+        }
+
+        if (Schema::hasColumn('notifications', 'popup_limit')) {
+            Schema::table('notifications', function (Blueprint $table) {
+                $table->dropColumn('popup_limit');
+            });
+        }
     }
 }
