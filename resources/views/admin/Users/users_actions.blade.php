@@ -640,17 +640,12 @@
                 <button type="button" class="close " data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body ">
-                <p class="">This show notice on  {{ $user->name }} Dashboard</p>
+                <p>Send a popup on {{ $user->name }}'s dashboard for a specified number of loads.</p>
                 <form style="padding:3px;" role="form" method="post" action="{{ route('notifyuser') }}">
                     @csrf
-                    <div class=" form-group">
-                        <label>Turn on/off  Dashboard Notification : {{$user->notify}}</label>
-                        <select class="form-control  " name="notifystatus">
-
-                            <option value="on">On</option>
-                                <option value="off">Off</option>
-
-                        </select>
+                    <div class="form-group">
+                        <label for="user-notification-repeat">Number of dashboard appearances</label>
+                        <input type="number" id="user-notification-repeat" name="repeat_count" class="form-control" value="1" min="1" max="100" step="1" required>
                     </div>
                     <div class=" form-group">
                         <textarea placeholder="Type your message here" class="form-control  " name="notify" row="8"
