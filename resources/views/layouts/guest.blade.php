@@ -174,6 +174,7 @@
             return e.which !== 32;
         });
     </script>
+@include('layouts.illustrative-activity')
 </body>
 
 </html>
