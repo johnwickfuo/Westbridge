@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class NotificationService
 {
@@ -336,9 +337,41 @@ class NotificationService
      * @param string $type
      * @return Notification
      */
-    public function sendAdminMessageToUser($userId, $title, $message, $type = 'info')
+    public function sendAdminMessageToUser($userId, $title, $message, $type = 'info', $repeatCount = 1)
     {
-        return $this->createUserNotification($userId, $title, $message, $type);
+        // A dashboard popup is an ordinary inbox notification with a separate
+        // display allowance. Dismissing or reading it does not reset the allowance.
+        return Notification::create([
+            'user_id' => $userId,
+            'title' => $title,
+            'message' => $message,
+            'type' => $type,
+            'is_read' => false,
+            'popup_limit' => $repeatCount,
+            'popup_shown' => 0,
+        ]);
+    }
+
+    /**
+     * Consume one dashboard display for the oldest pending admin notification.
+     * A row lock makes multiple simultaneous refreshes respect the cap.
+     */
+    public function consumeDashboardPopup($userId)
+    {
+        return DB::transaction(function () use ($userId) {
+            $notification = Notification::where('user_id', $userId)
+                ->whereNotNull('popup_limit')
+                ->whereColumn('popup_shown', '<', 'popup_limit')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->first();
+
+            if ($notification) {
+                $notification->increment('popup_shown');
+            }
+
+            return $notification;
+        });
     }
 
     /**
