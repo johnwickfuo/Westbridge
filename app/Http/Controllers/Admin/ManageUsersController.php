@@ -632,40 +632,27 @@ public function withdrawalcode(Request $request)
 
     public function notifyuser(Request $request)
     {
-        // Initialize notification service
-        $notificationService = app(\App\Services\NotificationService::class);
-        $user = User::where('id', $request['user_id'])->first();
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'notify' => ['required', 'string', 'max:5000'],
+            'repeat_count' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        User::where('id', $request['user_id'])
-            ->update([
-                'notify' => $request['notify'],
-                'notify_status' => $request['notifystatus'],
-            ]);
-
-        // Create user notification about plan upgrade status
-        $notificationService->createUserNotification(
-            $request['user_id'],
+        $notification = app(\App\Services\NotificationService::class)->sendAdminMessageToUser(
+            $data['user_id'],
             'Notification',
-            "{$request['notify']}",
-            'info'
-        );
-
-        // Create admin notification
-        $notificationService->createAdminNotification(
-            Auth::guard('admin')->id(),
-            'User Plan Upgrade Updated',
-            "Admin " . Auth::guard('admin')->user()->name . " updated  notification for user {$user->name}.",
+            $data['notify'],
             'info',
-            $request['user_id'],
-            'App\\Models\\User'
+            (int) $data['repeat_count']
         );
 
-        return redirect()->back()->with('success', 'User notification Successfully!');
+        return redirect()->back()->with(
+            $notification ? 'success' : 'error',
+            $notification ? 'Dashboard notification sent successfully!' : 'Failed to send notification.'
+        );
     }
 
-
-
-    public function upgradesignalstatus(Request $request)
+        public function upgradesignalstatus(Request $request)
     {
         // Initialize notification service
         $notificationService = app(\App\Services\NotificationService::class);
